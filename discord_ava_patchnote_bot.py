@@ -40,7 +40,7 @@ async def on_ready():
 		
 	msg = "This guild will now receive AVA news"
 	if hello_world == False:
-		#await channel.send(msg)
+		await channel.send(msg)
 		hello_world = True
 		print("Bot is ready")
 
@@ -76,15 +76,24 @@ async def checking():
 				message = "Title: " + latest_notice_title + "\n\nTime: " + notice_post_date + "\n\nURL: " + str(notice_url) + "\n\n\n" + str(notice_content)
 				await channel.send(message)
 			
+				f = open("log.txt","a")
+				f.write("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted \"" + latest_notice_title + "\"\n")
 				print("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted \"" + latest_notice_title + "\"")
-			
+				f.close()
+				
 			else:
+				f = open("log.txt","a")
+				f.write("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title + "\n")
 				print("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title)
+				f.close()
 				await asyncio.sleep(check_interval)
 		
 		except AttributeError:
 			retry_time = 10
+			f = open("log.txt","a")
+			f.write("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(retry_time) + " seconds...\n")
 			print("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(retry_time) + " seconds...")
+			f.close()
 			await asyncio.sleep(retry_time)
 
 client.loop.create_task(checking())
