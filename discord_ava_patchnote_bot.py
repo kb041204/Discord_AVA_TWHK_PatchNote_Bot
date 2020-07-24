@@ -22,7 +22,7 @@ check_interval = int(CHECK_INTERVAL) * 60
 client = discord.Client()
 curr_guild = None
 channel = None
-
+log_count = 0
 
 @client.event
 async def on_ready():
@@ -47,7 +47,7 @@ async def on_ready():
 
 @client.event
 async def checking():
-	global ava_url, latest_notice_title, check_interval
+	global ava_url, latest_notice_title, check_interval, log_count
 	
 	while(True):
 		res = requests.get(ava_url + "/game/ava/notice")
@@ -73,7 +73,7 @@ async def checking():
 			
 				curr_guild = discord.utils.get(client.guilds, name=GUILD)
 				channel = discord.utils.get(curr_guild.text_channels, name=CHANNEL)
-				message = "Title: " + latest_notice_title + "\n\nTime: " + notice_post_date + "\n\nURL: " + str(notice_url) + "\n\n\n" + str(notice_content)
+				message = latest_notice_title + "\n\n" + notice_post_date + "\n\n" + str(notice_url) + "\n\n\n" + str(notice_content)
 				await channel.send(message)
 			
 				f = open("log.txt","a")
@@ -82,10 +82,14 @@ async def checking():
 				f.close()
 				
 			else:
-				f = open("log.txt","a")
-				f.write("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title + "\n")
-				print("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title)
-				f.close()
+				if log_count == 0:
+					f = open("log.txt","a")
+					f.write("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title + "\n")
+					print("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title)
+					f.close()
+				log_count = log_count + 1
+				if log_count == 5:
+					log_count = 0
 				await asyncio.sleep(check_interval)
 		
 		except AttributeError:
