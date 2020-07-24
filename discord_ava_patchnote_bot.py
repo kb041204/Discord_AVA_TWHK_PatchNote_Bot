@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import time
 import requests
 from bs4 import BeautifulSoup
+import traceback
 
 load_dotenv(encoding="utf_8")
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -14,15 +15,19 @@ GUILD = os.getenv('DISCORD_GUILD')
 CHANNEL = os.getenv('DISCORD_CHANNEL')
 CHECK_INTERVAL = os.getenv('AVA_CHECK_INTERVAL_IN_MINUTES')
 
-ava_url = "https://ava.mangot5.com"
 latest_notice_title = "none"
 hello_world = False
-check_interval = int(CHECK_INTERVAL) * 60
+log_count = 0
 
 client = discord.Client()
 curr_guild = None
 channel = None
-log_count = 0
+
+def write_to_log(msg):
+	f = open("log.txt","a")
+	f.write(msg + "\n")
+	print(msg)
+	f.close()
 
 @client.event
 async def on_ready():
@@ -38,16 +43,19 @@ async def on_ready():
 		print("In guild: \"" + GUILD +  "\", text channel \"" + CHANNEL + "\" not found")
 		return
 		
-	msg = "This guild will now receive AVA news"
+	msg = "This channel will now receive AVA TW/HK news"
 	if hello_world == False:
-		await channel.send(msg)
+		await channel.send(msg) #Please remove the comment symbol (#) if you are running this the first time
 		hello_world = True
-		print("Bot is ready")
-
+		write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Bot is online")
 
 @client.event
 async def checking():
-	global ava_url, latest_notice_title, check_interval, log_count
+	ava_url = "https://ava.mangot5.com"
+	retry_time = 10
+	check_interval = int(CHECK_INTERVAL) * 60
+	
+	global latest_notice_title, log_count
 	
 	while(True):
 		res = requests.get(ava_url + "/game/ava/notice")
@@ -70,35 +78,27 @@ async def checking():
 				notice_soup = BeautifulSoup(notice_res.text, 'html.parser')
 				notice_content = notice_soup.find("div", {"class": "view_contents"}).text.strip()
 				notice_post_date = notice_soup.find("dl", {"class": "fR"}).dd.text.strip()
-			
-				curr_guild = discord.utils.get(client.guilds, name=GUILD)
-				channel = discord.utils.get(curr_guild.text_channels, name=CHANNEL)
-				message = latest_notice_title + "\n\n" + notice_post_date + "\n\n" + str(notice_url) + "\n\n\n" + str(notice_content)
-				await channel.send(message)
-			
-				f = open("log.txt","a")
-				f.write("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted \"" + latest_notice_title + "\"\n")
-				print("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted \"" + latest_notice_title + "\"")
-				f.close()
 				
-			else:
+				#Send message and log
+				curr_guild = discord.utils.get(client.guilds, name=GUILD)
+				if curr_guild is not None:
+					channel = discord.utils.get(curr_guild.text_channels, name=CHANNEL)
+					message = latest_notice_title + "\n\n" + notice_post_date + "\n\n" + str(notice_url) + "\n\n\n" + str(notice_content)
+					await channel.send(message)
+					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted \"" + latest_notice_title + "\"")
+				
+			else: #No update
 				if log_count == 0:
-					f = open("log.txt","a")
-					f.write("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title + "\n")
-					print("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title)
-					f.close()
+					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title)
 				log_count = log_count + 1
 				if log_count == 5:
 					log_count = 0
 				await asyncio.sleep(check_interval)
 		
-		except AttributeError:
-			retry_time = 10
-			f = open("log.txt","a")
-			f.write("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(retry_time) + " seconds...\n")
-			print("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(retry_time) + " seconds...")
-			f.close()
+		except Exception as e: #AVA Server error
+			tb = traceback.format_exc()
+			write_to_log("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(retry_time) + " seconds. " + str(tb))
 			await asyncio.sleep(retry_time)
-
+		
 client.loop.create_task(checking())
 client.run(TOKEN)
