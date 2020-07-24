@@ -8,7 +8,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 
-load_dotenv()
+load_dotenv(encoding="utf_8")
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 CHANNEL = os.getenv('DISCORD_CHANNEL')
