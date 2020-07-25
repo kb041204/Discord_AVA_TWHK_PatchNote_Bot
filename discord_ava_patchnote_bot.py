@@ -51,14 +51,15 @@ async def on_ready():
 
 @client.event
 async def checking():
-	ava_url = "https://ava.mangot5.com"
-	retry_time = 10
-	check_interval = int(CHECK_INTERVAL) * 60
+	AVA_URL = "https://ava.mangot5.com"
+	RETRY_TIME = 10
+	NO_UPDATE_LOG_OCCURANCE = 10
+	CHECK_INTERVAL_IN_SEC = int(CHECK_INTERVAL) * 60
 	
 	global latest_notice_title, log_count
 	
 	while(True):
-		res = requests.get(ava_url + "/game/ava/notice")
+		res = requests.get(AVA_URL + "/game/ava/notice")
 		soup = BeautifulSoup(res.text, 'html.parser')
 
 		try:
@@ -68,7 +69,7 @@ async def checking():
 			if latest_notice_title != list_of_notices[0].text.strip():
 
 				#Extracting url of notice (notice_url)
-				notice_url = ava_url + list_of_notices[0]["href"]
+				notice_url = AVA_URL + list_of_notices[0]["href"]
 		
 				#Extracting title (latest_notice_title)
 				latest_notice_title = list_of_notices[0].text.strip()
@@ -86,19 +87,21 @@ async def checking():
 					message = latest_notice_title + "\n\n" + notice_post_date + "\n\n" + str(notice_url) + "\n\n\n" + str(notice_content)
 					await channel.send(message)
 					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted \"" + latest_notice_title + "\"")
+					log_count = 0
 				
 			else: #No update
 				if log_count == 0:
 					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title)
 				log_count = log_count + 1
-				if log_count == 5:
+				if log_count == NO_UPDATE_LOG_OCCURANCE:
 					log_count = 0
-				await asyncio.sleep(check_interval)
+				await asyncio.sleep(CHECK_INTERVAL_IN_SEC)
 		
 		except Exception as e: #AVA Server error
 			tb = traceback.format_exc()
 			write_to_log("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(retry_time) + " seconds. " + str(tb))
-			await asyncio.sleep(retry_time)
+			log_count = 0
+			await asyncio.sleep(RETRY_TIME)
 		
 client.loop.create_task(checking())
 client.run(TOKEN)
