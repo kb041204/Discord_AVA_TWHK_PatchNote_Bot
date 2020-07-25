@@ -45,7 +45,7 @@ async def on_ready():
 		
 	msg = "This channel will now receive AVA TW/HK news"
 	if hello_world == False:
-		await channel.send(msg) #Please remove the comment symbol (#) if you are running this the first time
+		#await channel.send(msg) #Please remove the comment symbol (#) if you are running this the first time
 		hello_world = True
 		write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Bot is online")
 
@@ -99,7 +99,7 @@ async def checking():
 		
 		except Exception as e: #AVA Server error
 			tb = traceback.format_exc()
-			write_to_log("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(retry_time) + " seconds. " + str(tb))
+			write_to_log("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(RETRY_TIME) + " seconds. " + str(tb))
 			log_count = 0
 			await asyncio.sleep(RETRY_TIME)
 		
