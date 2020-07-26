@@ -84,14 +84,15 @@ async def checking():
 				curr_guild = discord.utils.get(client.guilds, name=GUILD)
 				if curr_guild is not None:
 					channel = discord.utils.get(curr_guild.text_channels, name=CHANNEL)
-					message = latest_notice_title + "\n\n" + notice_post_date + "\n\n" + str(notice_url) + "\n\n\n" + str(notice_content)
+					message = str(latest_notice_title) + "\n\n" + str(notice_url) + "\n\n" + str(notice_content)
 					await channel.send(message)
-					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted \"" + latest_notice_title + "\"")
+					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted in discord: " + latest_notice_title + "\"")
 					log_count = 0
+					await asyncio.sleep(CHECK_INTERVAL_IN_SEC)
 				
 			else: #No update
 				if log_count == 0:
-					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest notice title: " + latest_notice_title)
+					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: " + latest_notice_title)
 				log_count = log_count + 1
 				if log_count == NO_UPDATE_LOG_OCCURANCE:
 					log_count = 0
