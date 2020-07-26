@@ -86,13 +86,13 @@ async def checking():
 					channel = discord.utils.get(curr_guild.text_channels, name=CHANNEL)
 					message = str(latest_notice_title) + "\n\n" + str(notice_url) + "\n\n" + str(notice_content)
 					await channel.send(message)
-					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted in discord: " + latest_notice_title + "\"")
+					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted in discord: \"" + latest_notice_title + "\"")
 					log_count = 0
 					await asyncio.sleep(CHECK_INTERVAL_IN_SEC)
 				
 			else: #No update
 				if log_count == 0:
-					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: " + latest_notice_title)
+					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: \"" + latest_notice_title + "\"")
 				log_count = log_count + 1
 				if log_count == NO_UPDATE_LOG_OCCURANCE:
 					log_count = 0
@@ -100,7 +100,7 @@ async def checking():
 		
 		except Exception as e: #AVA Server error
 			tb = traceback.format_exc()
-			write_to_log("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(RETRY_TIME) + " seconds. " + str(tb))
+			write_to_log("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(RETRY_TIME) + " seconds.\n"+ str(tb))
 			log_count = 0
 			await asyncio.sleep(RETRY_TIME)
 		
