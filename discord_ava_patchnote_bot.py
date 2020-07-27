@@ -18,45 +18,53 @@ CHECK_INTERVAL = os.getenv('AVA_CHECK_INTERVAL_IN_MINUTES')
 latest_notice_title = "none"
 hello_world = False
 log_count = 0
+last_update_or_error_time = 0
 
 client = discord.Client()
-curr_guild = None
-channel = None
 
-def write_to_log(msg):
+class SettingError(Exception):
+    pass
+
+def append_to_log(msg): #Add a new line
 	f = open("log.txt","a")
+	f.write(msg + "\n")
+	print(msg)
+	f.close()
+
+def write_to_log(msg): #Overwrite all the existing line
+	f = open("log.txt","w")
 	f.write(msg + "\n")
 	print(msg)
 	f.close()
 
 @client.event
 async def on_ready():
-	global hello_world, curr_guild, channel
+	global hello_world
 
 	curr_guild = discord.utils.get(client.guilds, name=GUILD)
 	if curr_guild is None:
-		print("Guild \"" + GUILD + "\" not found")
-		return
+		raise SettingError("Guild \"" + GUILD + "\" not found")
 		
 	channel = discord.utils.get(curr_guild.text_channels, name=CHANNEL)
 	if channel is None:
-		print("In guild: \"" + GUILD +  "\", text channel \"" + CHANNEL + "\" not found")
-		return
+		raise SettingError("In guild: \"" + GUILD +  "\", text channel \"" + CHANNEL + "\" not found")
 		
 	msg = "This channel will now receive AVA TW/HK news"
 	if hello_world == False:
 		#await channel.send(msg) #Please remove the comment symbol (#) if you are running this the first time
 		hello_world = True
-		write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Bot is online")
+		append_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Bot is online")
 
 @client.event
 async def checking():
-	AVA_URL = "https://ava.mangot5.com"
 	RETRY_TIME = 10
 	NO_UPDATE_LOG_OCCURANCE = 10
-	CHECK_INTERVAL_IN_SEC = int(CHECK_INTERVAL) * 60
+	DAYS_WITHOUT_UPDATE_CLEAR_LOG = 1
 	
-	global latest_notice_title, log_count
+	AVA_URL = "https://ava.mangot5.com"
+	CHECK_INTERVAL_IN_SEC = int(CHECK_INTERVAL) * 60
+
+	global latest_notice_title, log_count, last_update_or_error_time
 	
 	while(True):
 		res = requests.get(AVA_URL + "/game/ava/notice")
@@ -86,13 +94,20 @@ async def checking():
 					channel = discord.utils.get(curr_guild.text_channels, name=CHANNEL)
 					message = str(latest_notice_title) + "\n\n" + str(notice_url) + "\n\n" + str(notice_content)
 					await channel.send(message)
-					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted in discord: '" + latest_notice_title + "'")
+					append_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted in discord: '" + latest_notice_title + "'")
 					log_count = 0
+					last_update_or_error_time = time.time()
 					await asyncio.sleep(CHECK_INTERVAL_IN_SEC)
 				
 			else: #No update
 				if log_count == 0:
-					write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: '" + latest_notice_title + "'")
+					message = "[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: '" + latest_notice_title + "'"
+					if (time.time() - last_update_or_error_time >= DAYS_WITHOUT_UPDATE_CLEAR_LOG*24*60*60): #If there's no updates in n day(s)
+						write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": " + DAYS_WITHOUT_UPDATE_CLEAR_LOG + " day(s) without update, cleared previous logs")
+						append_to_log(message)
+						last_update_or_error_time = time.time()
+					else:
+						append_to_log(message)
 				log_count = log_count + 1
 				if log_count == NO_UPDATE_LOG_OCCURANCE:
 					log_count = 0
@@ -100,8 +115,9 @@ async def checking():
 		
 		except Exception as e: #AVA Server error
 			tb = traceback.format_exc()
-			write_to_log("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(RETRY_TIME) + " seconds.\n"+ str(tb))
+			append_to_log("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(RETRY_TIME) + " seconds.\n" + str(tb) + "\n")
 			log_count = 0
+			last_update_or_error_time = time.time()
 			await asyncio.sleep(RETRY_TIME)
 		
 client.loop.create_task(checking())
