@@ -104,10 +104,8 @@ async def checking():
 					message = "[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: '" + latest_notice_title + "'"
 					if (time.time() - last_update_or_error_time >= DAYS_WITHOUT_UPDATE_CLEAR_LOG*24*60*60): #If there's no updates in n day(s)
 						write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": " + DAYS_WITHOUT_UPDATE_CLEAR_LOG + " day(s) without update, cleared previous logs")
-						append_to_log(message)
 						last_update_or_error_time = time.time()
-					else:
-						append_to_log(message)
+					append_to_log(message)
 				log_count = log_count + 1
 				if log_count == NO_UPDATE_LOG_OCCURANCE:
 					log_count = 0
