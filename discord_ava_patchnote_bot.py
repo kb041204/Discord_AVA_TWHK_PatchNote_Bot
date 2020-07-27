@@ -18,7 +18,7 @@ CHECK_INTERVAL = os.getenv('AVA_CHECK_INTERVAL_IN_MINUTES')
 latest_notice_title = "none"
 hello_world = False
 log_count = 0
-last_update_or_error_time = 0
+last_update_or_error_time = time.time()
 
 client = discord.Client()
 
