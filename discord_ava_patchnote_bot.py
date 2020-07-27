@@ -94,16 +94,16 @@ async def checking():
 					channel = discord.utils.get(curr_guild.text_channels, name=CHANNEL)
 					message = str(latest_notice_title) + "\n\n" + str(notice_url) + "\n\n" + str(notice_content)
 					await channel.send(message)
-					append_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted in discord: '" + latest_notice_title + "'")
+					append_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted in discord: '" + str(latest_notice_title) + "'")
 					log_count = 0
 					last_update_or_error_time = time.time()
 					await asyncio.sleep(CHECK_INTERVAL_IN_SEC)
 				
 			else: #No update
 				if log_count == 0:
-					message = "[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: '" + latest_notice_title + "'"
+					message = "[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: '" + str(latest_notice_title) + "'"
 					if (time.time() - last_update_or_error_time >= DAYS_WITHOUT_UPDATE_CLEAR_LOG*24*60*60): #If there's no updates in n day(s)
-						write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": " + DAYS_WITHOUT_UPDATE_CLEAR_LOG + " day(s) without update, cleared previous logs")
+						write_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": " + str(DAYS_WITHOUT_UPDATE_CLEAR_LOG) + " day(s) without update, cleared previous logs")
 						last_update_or_error_time = time.time()
 					append_to_log(message)
 				log_count = log_count + 1
