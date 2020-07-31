@@ -15,10 +15,13 @@ GUILD = os.getenv('DISCORD_GUILD')
 CHANNEL = os.getenv('DISCORD_CHANNEL')
 CHECK_INTERVAL = os.getenv('AVA_CHECK_INTERVAL_IN_MINUTES')
 
-latest_notice_title = "none"
 hello_world = False
 log_count = 0
+
 last_update_or_error_time = time.time()
+latest_notice_title = "none"
+last_message = "none"
+last_url = "none"
 
 client = discord.Client()
 
@@ -64,7 +67,7 @@ async def checking():
 	AVA_URL = "https://ava.mangot5.com"
 	CHECK_INTERVAL_IN_SEC = int(CHECK_INTERVAL) * 60
 
-	global latest_notice_title, log_count, last_update_or_error_time
+	global log_count, latest_notice_title, last_update_or_error_time, last_message, last_url
 	
 	while(True):
 		res = requests.get(AVA_URL + "/game/ava/notice")
@@ -93,8 +96,16 @@ async def checking():
 				if curr_guild is not None:
 					channel = discord.utils.get(curr_guild.text_channels, name=CHANNEL)
 					message = str(latest_notice_title) + "\n\n" + str(notice_url) + "\n\n" + str(notice_content)
-					await channel.send(message)
-					append_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted in discord: '" + str(latest_notice_title) + "'")
+					
+					if last_url == notice_url: #Title changed but URL not changed
+						await message_sent_to_discord.edit(content=message, suppress=False)
+						append_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Edited post in discord: '" + str(latest_notice_title) + "'")
+					else:
+						message_sent_to_discord = await channel.send(message)
+						append_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted in discord: '" + str(latest_notice_title) + "'")
+					
+					last_message = message
+					last_url = notice_url
 					log_count = 0
 					last_update_or_error_time = time.time()
 					await asyncio.sleep(CHECK_INTERVAL_IN_SEC)
