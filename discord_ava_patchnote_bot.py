@@ -23,7 +23,7 @@ latest_notice_title = "none"
 last_message = "none"
 last_url = "none"
 
-client = discord.Client()
+client = discord.Client(activity=discord.Activity(name="AVA web server", type=discord.ActivityType.listening))
 
 class SettingError(Exception):
     pass
