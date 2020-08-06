@@ -65,7 +65,7 @@ async def checking():
 	DAYS_WITHOUT_UPDATE_CLEAR_LOG = 1 #How many days should pass without any update to clear all previous logs
 	RETRY_TIME_IN_SECONDS = 10 #How many seconds to wait until retry upon error
 	ERROR_RETRY_ADJUSTMENT_COUNT = 10 #How many consecutive error it receives before adjusting the retry time
-	ERROR_RETRY_ADJUSTMENT_LIMIT = int(CHECK_INTERVAL*60/RETRY_TIME_IN_SECONDS) #How many times the system is allowed to change its adjustment, default = max every check interval
+	ERROR_RETRY_ADJUSTMENT_LIMIT = int(int(CHECK_INTERVAL)*60/int(RETRY_TIME_IN_SECONDS)) #How many times the system is allowed to change its adjustment, default = max every check interval
 	
 	AVA_URL = "https://ava.mangot5.com"
 	CHECK_INTERVAL_IN_SEC = int(CHECK_INTERVAL) * 60
