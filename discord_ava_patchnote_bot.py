@@ -17,6 +17,7 @@ CHECK_INTERVAL = os.getenv('AVA_CHECK_INTERVAL_IN_MINUTES')
 
 hello_world = False
 log_count = 0
+error_count = 0
 
 last_update_or_error_time = time.time()
 latest_notice_title = "none"
@@ -60,9 +61,11 @@ async def on_ready():
 
 @client.event
 async def checking():
-	RETRY_TIME = 10
-	NO_UPDATE_LOG_OCCURANCE = 10
-	DAYS_WITHOUT_UPDATE_CLEAR_LOG = 1
+	NO_UPDATE_LOG_OCCURANCE = 10 #How many consecutive no update log should not be recorded
+	DAYS_WITHOUT_UPDATE_CLEAR_LOG = 1 #How many days should pass without any update to clear all previous logs
+	RETRY_TIME_IN_SECONDS = 10 #How many seconds to wait until retry upon error
+	ERROR_RETRY_ADJUSTMENT_COUNT = 10 #How many consecutive error it receives before adjusting the retry time
+	ERROR_RETRY_ADJUSTMENT_LIMIT = 6 #How many times the system is allowed to change its adjustment
 	
 	AVA_URL = "https://ava.mangot5.com"
 	CHECK_INTERVAL_IN_SEC = int(CHECK_INTERVAL) * 60
@@ -122,12 +125,19 @@ async def checking():
 					log_count = 0
 				await asyncio.sleep(CHECK_INTERVAL_IN_SEC)
 		
+			error_count = 0 #Previous post has no error
+			
 		except Exception as e: #AVA Server error
 			tb = traceback.format_exc()
-			append_to_log("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(RETRY_TIME) + " seconds.\n" + str(tb) + "\n")
+			error_count = error_count + 1 #Increase error count
+			adjustment = int(error_count / ERROR_RETRY_ADJUSTMENT_COUNT) + 1
+			if adjustment >= ERROR_RETRY_ADJUSTMENT_LIMIT:
+				adjustment = ERROR_RETRY_ADJUSTMENT_LIMIT
+			actual_retry_time = adjustment*RETRY_TIME_IN_SECONDS
+			append_to_log("[Error] " + time.asctime(time.localtime(time.time())) +  ": Error in AVA website server, re-try in " + str(actual_retry_time) + " seconds.\n" + str(tb) + "\n")
 			log_count = 0
 			last_update_or_error_time = time.time()
-			await asyncio.sleep(RETRY_TIME)
+			await asyncio.sleep(actual_retry_time)
 		
 client.loop.create_task(checking())
 client.run(TOKEN)
