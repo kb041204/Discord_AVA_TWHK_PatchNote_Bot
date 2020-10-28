@@ -98,13 +98,13 @@ async def checking():
 				curr_guild = discord.utils.get(client.guilds, name=GUILD)
 				if curr_guild is not None:
 					channel = discord.utils.get(curr_guild.text_channels, name=CHANNEL)
-					message = str(latest_notice_title) + "\n\n" + str(notice_url) + "\n\n" + str(notice_content)
+					message = discord.Embed(title=str(latest_notice_title), description=str(notice_content), url=str(notice_url), colour=discord.Color.teal())
 					
 					if last_url == notice_url: #Title changed but URL not changed
-						await message_sent_to_discord.edit(content=message, suppress=False)
+						await message_sent_to_discord.edit(embed=message, suppress=False)
 						append_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Edited post in discord: '" + str(latest_notice_title) + "'")
 					else:
-						message_sent_to_discord = await channel.send(message)
+						message_sent_to_discord = await channel.send(embed=message)
 						append_to_log("[Log] " + time.asctime(time.localtime(time.time())) +  ": Posted in discord: '" + str(latest_notice_title) + "'")
 					
 					last_message = message
