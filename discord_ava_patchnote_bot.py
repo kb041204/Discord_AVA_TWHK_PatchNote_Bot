@@ -126,10 +126,12 @@ async def checking():
 				if log_count == NO_UPDATE_LOG_OCCURANCE:
 					log_count = 0
 				if int(time.strftime("%H", time.localtime(time.time()))) == 16: #UTC 16:00/GMT+8 00:00
-					message = "[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: '" + str(latest_notice_title) + "', BOT going to sleep mode for " + str(SLEEP_INTERVAL_IN_HOUR)  + " hours"
+					message = "[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: '" + str(latest_notice_title) + "', BOT going to sleep for " + str(SLEEP_INTERVAL_IN_HOUR)  + " hours"
 					append_to_log(message)
 					log_count = 0
+					await client.change_presence(activity=discord.Activity(name="Chow Gong", type=discord.ActivityType.listening))
 					await asyncio.sleep(SLEEP_INTERVAL_IN_SEC)
+					await client.change_presence(activity=discord.Activity(name="AVA web server", type=discord.ActivityType.listening))
 				else:
 					await asyncio.sleep(CHECK_INTERVAL_IN_SEC)
 		
