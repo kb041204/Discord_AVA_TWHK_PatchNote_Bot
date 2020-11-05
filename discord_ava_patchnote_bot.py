@@ -66,9 +66,11 @@ async def checking():
 	RETRY_TIME_IN_SECONDS = 10 #How many seconds to wait until retry upon error
 	ERROR_RETRY_ADJUSTMENT_COUNT = 10 #How many consecutive error it receives before adjusting the retry time
 	ERROR_RETRY_ADJUSTMENT_LIMIT = int(int(CHECK_INTERVAL)*60/int(RETRY_TIME_IN_SECONDS)) #How many times the system is allowed to change its adjustment, default = max every check interval
+	SLEEP_INTERVAL_IN_HOUR = 7
 	
 	AVA_URL = "https://ava.mangot5.com"
 	CHECK_INTERVAL_IN_SEC = int(CHECK_INTERVAL) * 60
+	SLEEP_INTERVAL_IN_SEC = SLEEP_INTERVAL_IN_HOUR*60*60
 
 	global log_count, latest_notice_title, last_update_or_error_time, last_message, last_url
 	
@@ -123,7 +125,13 @@ async def checking():
 				log_count = log_count + 1
 				if log_count == NO_UPDATE_LOG_OCCURANCE:
 					log_count = 0
-				await asyncio.sleep(CHECK_INTERVAL_IN_SEC)
+				if int(time.strftime("%H", time.localtime(curr_time))) == 16: #UTC 16:00/GMT+8 00:00
+					message = "[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: '" + str(latest_notice_title) + "', BOT going to sleep mode for " + str(SLEEP_INTERVAL_IN_HOUR)  + " hours"
+					append_to_log(message)
+					log_count = 0
+					await asyncio.sleep(SLEEP_INTERVAL_IN_SEC)
+				else:
+					await asyncio.sleep(CHECK_INTERVAL_IN_SEC)
 		
 			error_count = 0 #Previous post has no error
 			
