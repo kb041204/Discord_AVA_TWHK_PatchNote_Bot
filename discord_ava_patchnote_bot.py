@@ -125,7 +125,7 @@ async def checking():
 				log_count = log_count + 1
 				if log_count == NO_UPDATE_LOG_OCCURANCE:
 					log_count = 0
-				if int(time.strftime("%H", time.localtime(curr_time))) == 16: #UTC 16:00/GMT+8 00:00
+				if int(time.strftime("%H", time.localtime(time.time()))) == 16: #UTC 16:00/GMT+8 00:00
 					message = "[Log] " + time.asctime(time.localtime(time.time())) +  ": No update, latest: '" + str(latest_notice_title) + "', BOT going to sleep mode for " + str(SLEEP_INTERVAL_IN_HOUR)  + " hours"
 					append_to_log(message)
 					log_count = 0
